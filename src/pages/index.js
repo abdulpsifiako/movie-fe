@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import Image from "next/image";
 import localFont from "next/font/local";
+import { searchMovies } from '../services/api';  // Impor fungsi pencarian
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,6 +15,21 @@ const geistMono = localFont({
 });
 
 export default function Home() {
+  const [title, setTitle] = useState(''); // State untuk input judul
+  const [movies, setMovies] = useState([]); // State untuk menyimpan daftar film
+  const [error, setError] = useState(null); // State untuk menangani error
+
+  const handleSearch = async () => {
+    try {
+      const response = await searchMovies(title);
+      setMovies(response.data.data); // Menyimpan film yang ditemukan
+      setError(null); // Reset error jika pencarian berhasil
+    } catch (error) {
+      setMovies([]); // Kosongkan daftar film jika terjadi error
+      setError('No movies found or error occurred'); // Menampilkan pesan error
+    }
+  };
+
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
@@ -26,16 +43,34 @@ export default function Home() {
           height={38}
           priority
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        
+        {/* Form pencarian */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Search for movies..."
+          className="border p-2 rounded"
+        />
+        <button onClick={handleSearch} className="bg-blue-500 text-white p-2 rounded mt-2">
+          Search
+        </button>
+
+        {/* Menampilkan hasil pencarian atau pesan error */}
+        {error && <div className="text-red-500">{error}</div>}
+        
+        <div className="mt-4">
+          {movies.length > 0 && (
+            <ul>
+              {movies.map((movie) => (
+                <li key={movie.id} className="mb-2">
+                  <h3 className="font-semibold">{movie.title}</h3>
+                  <p>{movie.summary}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
